@@ -1,18 +1,14 @@
-package gmail
+package google
 
 import (
 	"time"
 )
 
-type GmailProfile struct {
+type GoogleProfile struct {
 	ID            int       `json:"id"`
 	EmailAddress  string    `json:"emailAddress"`
-	MessagesTotal int       `json:"messagesTotal"`
-	ThreadsTotal  int       `json:"threadsTotal"`
-	HistoryId     string    `json:"historyId"`
 	Tokens        Tokens    `json:"tokens"`
 	LastUpdatedAt time.Time `json:"timestamp"`
-	UnreadCount   int       `json:"unreadCount"`
 }
 
 type Tokens struct {

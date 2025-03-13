@@ -3,13 +3,13 @@ package auth
 import (
 	"errors"
 
-	"github.com/M1z23R/google-cli/gmail"
-	"github.com/M1z23R/google-cli/gmail/profiles"
+	"github.com/M1z23R/google-cli/google"
+	"github.com/M1z23R/google-cli/google/profiles"
 )
 
 const gmailApiUrl = "https://gmail.googleapis.com/gmail/v1"
 
-func AddProfile(profile *gmail.GmailProfile) error {
+func AddProfile(profile *google.GoogleProfile) error {
 	code, err := GetOAuthCode()
 	if err != nil {
 		return err 

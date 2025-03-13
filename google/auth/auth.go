@@ -9,18 +9,18 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/M1z23R/google-cli/gmail"
+	"github.com/M1z23R/google-cli/google"
 )
 
 var (
 	TokenUrl     = "https://oauth2.googleapis.com/token"
 	ClientID     = os.Getenv("GOOGLE_CLIENT_ID")
 	ClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
-	CallbackUrl  = "http://localhost:1337/callback"
+	CallbackUrl  = "http://localhost:1337/google/callback"
 	BaseURL      = "https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount"
 )
 
-func RefreshToken(profile *gmail.GmailProfile) error {
+func RefreshToken(profile *google.GoogleProfile) error {
 	qps := url.Values{}
 
 	qps.Add("client_id", ClientID)
@@ -29,16 +29,17 @@ func RefreshToken(profile *gmail.GmailProfile) error {
 	qps.Add("grant_type", "refresh_token")
 
 	url := fmt.Sprintf("%s?%s", TokenUrl, qps.Encode())
-	err := gmail.GmailApiCall("POST", url, nil, &profile.Tokens, profile)
+	err := google.GmailApiCall("POST", url, nil, &profile.Tokens, profile)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return err
 	}
 
+	fmt.Println("Refreshed Tokens")
 	return nil
 }
 
-func TokensFromCode(code string, tokens *gmail.Tokens) error {
+func TokensFromCode(code string, tokens *google.Tokens) error {
 	params := url.Values{}
 
 	params.Add("client_id", ClientID)
@@ -50,7 +51,7 @@ func TokensFromCode(code string, tokens *gmail.Tokens) error {
 	payload := map[string]string{}
 	payload["code"] = code
 
-	err := gmail.GmailApiCall("POST", url, payload, &tokens, nil)
+	err := google.GmailApiCall("POST", url, payload, &tokens, nil)
 
 	if err != nil {
 		return err
@@ -62,6 +63,7 @@ func TokensFromCode(code string, tokens *gmail.Tokens) error {
 func GenerateConsentUrl() string {
 	params := url.Values{}
 	params.Add("access_type", "offline")
+	params.Add("prompt", "consent")
 	params.Add("client_id", ClientID)
 	params.Add("redirect_uri", CallbackUrl)
 	params.Add("response_type", "code")
@@ -69,7 +71,11 @@ func GenerateConsentUrl() string {
 	params.Add("o2v", "2")
 	params.Add("flowName", "GeneralOAuthFlow")
 	scopes := []string{
+		"openid",
+		"email",
+		"profile",
 		"https://mail.google.com",
+		"https://www.googleapis.com/auth/calendar",
 	}
 	params.Add("scope", strings.Join(scopes, " "))
 
@@ -82,10 +88,16 @@ func GetOAuthCode() (string, error) {
 		return "", errors.New("GOOGLE_CLIENT_ID and/or GOOGLE_CLIENT_SECRET aren't set.\nUse:\nexport GOOGLE_CLIENT_ID=\"your_client_id\"\nexport GOOGLE_CLIENT_SECRET=\"your_client_secret\" or set it in your .bashrc/.zshrc")
 	}
 
-	exec.Command("xdg-open", GenerateConsentUrl()).Start()
-	GenerateConsentUrl()
+	cmd := exec.Command("xdg-open", GenerateConsentUrl())
+	cmd.Start()
+	err := cmd.Wait()
+
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Failed to run browser automatically, please visit the following manually:\n%s\n", GenerateConsentUrl()))
+	}
+
 	codeCh := make(chan string)
-	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 		codeCh <- code
 	})
@@ -95,4 +107,3 @@ func GetOAuthCode() (string, error) {
 
 	return code, nil
 }
-

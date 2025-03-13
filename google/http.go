@@ -1,4 +1,4 @@
-package gmail
+package google
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func GmailApiCall(method string, url string, requestBody any, responseBody any, profile *GmailProfile) error {
+func GmailApiCall(method string, url string, requestBody any, responseBody any, profile *GoogleProfile) error {
 	payload, err := json.Marshal(requestBody)
 	if err != nil {
 		return err
