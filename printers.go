@@ -38,8 +38,8 @@ func printMessages(profile *google.GoogleProfile) {
 
 	for i, v := range r.Messages {
 		var m google.GmailMessage
-		gmail.MessagesGet(profile, &m, v.Id)
-		fmt.Printf("%d) %s\n", i, gmail.ExtractSubject(&m))
+		gmail.MessagesGetMetadata(profile, &m, v.Id)
+		fmt.Printf("%d) %s\n%s\n", i, gmail.ExtractHeader(&m, "From"), gmail.ExtractHeader(&m, "Subject"))
 	}
 }
 

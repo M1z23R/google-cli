@@ -33,3 +33,17 @@ func MessagesGet(profile *google.GoogleProfile, message *google.GmailMessage, id
 
 	return nil
 }
+
+func MessagesGetMetadata(profile *google.GoogleProfile, message *google.GmailMessage, id string) error {
+	values := url.Values{}
+	values.Add("metadataHeaders", "From")
+	values.Add("metadataHeaders", "Subject")
+	url := fmt.Sprintf("%s/%s?%s", gmailApiUrl, id, values.Encode())
+
+	err := google.GmailApiCall("GET", url, nil, &message, profile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
