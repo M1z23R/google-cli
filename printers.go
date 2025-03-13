@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	clicolors "github.com/M1z23R/google-cli/cli-colors"
 	"github.com/M1z23R/google-cli/google"
 	"github.com/M1z23R/google-cli/google/auth"
 	"github.com/M1z23R/google-cli/google/calendar"
@@ -34,12 +35,18 @@ func printMessages(profile *google.GoogleProfile) {
 	auth.RefreshToken(profile)
 	persistence.UpsertProfile(profile)
 
-	gmail.MessagesList(profile, &r)
+	gmail.MessagesList(profile, &r, 1)
 
-	for i, v := range r.Messages {
+	for _, v := range r.Messages {
 		var m google.GmailMessage
+		var c int
 		gmail.MessagesGetMetadata(profile, &m, v.Id)
-		fmt.Printf("%d) %s\n%s\n", i, gmail.ExtractHeader(&m, "From"), gmail.ExtractHeader(&m, "Subject"))
+		gmail.MessagesUnreadCount(profile, &c)
+		lastMessageSubject := fmt.Sprintf("%s%s%s", clicolors.Blue, gmail.ExtractHeader(&m, "Subject"), clicolors.Reset)
+		lastMessageFrom := fmt.Sprintf("%s%s%s", clicolors.Cyan, gmail.ExtractHeader(&m, "From"), clicolors.Reset)
+		lastMessage := fmt.Sprintf("%s | %s\n", lastMessageFrom, lastMessageSubject)
+		unreadCount := fmt.Sprintf("%sUnread: %d%s", clicolors.GetUnreadColor(c), c, clicolors.Reset)
+		fmt.Printf("%s | %s\n", unreadCount, lastMessage)
 	}
 }
 
@@ -51,7 +58,7 @@ func printCalendar(profile *google.GoogleProfile) {
 	persistence.UpsertProfile(profile)
 	calendar.GetNextEvent(profile, &r, start)
 	for _, v := range r.Items {
-		fmt.Printf("%s | %s\n", v.Summary, joinTimes(v.Start.DateTime, v.End.DateTime))
+		fmt.Printf("%s%s | %s%s\n", clicolors.GetEventColor(v.Start.DateTime), v.Summary, joinTimes(v.Start.DateTime, v.End.DateTime), clicolors.Reset)
 	}
 }
 
