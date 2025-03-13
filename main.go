@@ -65,11 +65,10 @@ func main() {
 			{
 				var profile google.GoogleProfile
 				var err error
-				idStr := os.Args[2]
-				if idStr == "" {
-					err = persistence.GetFirstProfile(&profile)
+				if len(os.Args) > 2 {
+					err = persistence.GetProfile(os.Args[2], &profile)
 				} else {
-					err = persistence.GetProfile(idStr, &profile)
+					err = persistence.GetFirstProfile(&profile)
 				}
 
 				if err != nil {

@@ -10,16 +10,22 @@ import (
 	"strings"
 
 	"github.com/M1z23R/google-cli/google"
+	"github.com/joho/godotenv"
 )
 
 var (
 	TokenUrl     = "https://oauth2.googleapis.com/token"
-	ClientID     = os.Getenv("GOOGLE_CLIENT_ID")
-	ClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
+	ClientID     string
+	ClientSecret string
 	CallbackUrl  = "http://localhost:1337/google/callback"
 	BaseURL      = "https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount"
 )
 
+func init() {
+	godotenv.Load()
+	ClientID = os.Getenv("GOOGLE_CLIENT_ID")
+	ClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
+}
 func RefreshToken(profile *google.GoogleProfile) error {
 	qps := url.Values{}
 
@@ -35,7 +41,6 @@ func RefreshToken(profile *google.GoogleProfile) error {
 		return err
 	}
 
-	fmt.Println("Refreshed Tokens")
 	return nil
 }
 
@@ -97,10 +102,7 @@ func GetOAuthCode() (string, error) {
 	}
 
 	codeCh := make(chan string)
-	http.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) {
-		code := r.URL.Query().Get("code")
-		codeCh <- code
-	})
+	CallbackResponse(codeCh)
 	go http.ListenAndServe(":1337", nil)
 
 	code := <-codeCh

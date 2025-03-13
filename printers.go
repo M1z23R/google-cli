@@ -45,14 +45,11 @@ func printMessages(profile *google.GoogleProfile) {
 
 func printCalendar(profile *google.GoogleProfile) {
 	var r google.CalendarEventResponse
-	now := time.Now()
-	tomorrow := time.Now().Add(24 * time.Hour)
-	start := now
-	end := time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, tomorrow.Location())
+	start := time.Now(); 
 
 	auth.RefreshToken(profile)
 	persistence.UpsertProfile(profile)
-	calendar.GetEvents(profile, &r, start, end)
+	calendar.GetNextEvent(profile, &r, start) 
 	for _, v := range r.Items {
 		fmt.Printf("%s | %s\n", joinTimes(v.Start.DateTime, v.End.DateTime), v.Summary)
 	}
