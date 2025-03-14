@@ -37,3 +37,7 @@ type GmailMessagesResponse struct {
 	ResultSizeEstimate int            `json:"resultSizeEstimate"`
 	NextPageToken      string         `json:"nextPageToken"`
 }
+
+type GmailSendMessageResponse struct {
+	GmailMessage
+}

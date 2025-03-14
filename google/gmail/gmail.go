@@ -9,7 +9,7 @@ import (
 
 const gmailApiUrl = "https://gmail.googleapis.com/gmail/v1/users/me/messages"
 
-func MessagesList(profile *google.GoogleProfile, messagesList *google.GmailMessagesResponse, count int) error {
+func ListMessages(profile *google.GoogleProfile, messagesList *google.GmailMessagesResponse, count int) error {
 	values := url.Values{}
 	values.Add("labelIds", "INBOX")
 	values.Add("maxResults", fmt.Sprintf("%d", count))
@@ -23,7 +23,7 @@ func MessagesList(profile *google.GoogleProfile, messagesList *google.GmailMessa
 	return nil
 }
 
-func MessagesGet(profile *google.GoogleProfile, message *google.GmailMessage, id string) error {
+func GetMessage(profile *google.GoogleProfile, message *google.GmailMessage, id string) error {
 	url := fmt.Sprintf("%s/%s", gmailApiUrl, id)
 
 	err := google.GmailApiCall("GET", url, nil, &message, profile)
@@ -34,7 +34,7 @@ func MessagesGet(profile *google.GoogleProfile, message *google.GmailMessage, id
 	return nil
 }
 
-func MessagesGetMetadata(profile *google.GoogleProfile, message *google.GmailMessage, id string) error {
+func GetMessageMetadata(profile *google.GoogleProfile, message *google.GmailMessage, id string) error {
 	values := url.Values{}
 	values.Add("metadataHeaders", "From")
 	values.Add("metadataHeaders", "Subject")
@@ -48,7 +48,7 @@ func MessagesGetMetadata(profile *google.GoogleProfile, message *google.GmailMes
 	return nil
 }
 
-func MessagesUnreadCount(profile *google.GoogleProfile, count *int) error {
+func GetUnreadCount(profile *google.GoogleProfile, count *int) error {
 	values := url.Values{}
 	values.Add("labelIds", "INBOX")
 	values.Add("q", "is:unread")
@@ -61,5 +61,24 @@ func MessagesUnreadCount(profile *google.GoogleProfile, count *int) error {
 		return err
 	}
 	*count = len(messagesList.Messages)
+	return nil
+}
+
+func SendMessage(profile *google.GoogleProfile, from, to, subject, body, references, inReplyTo string) error {
+	rawMessage, err := createMimeMessage(from, to, subject, body, references, inReplyTo)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s/send", gmailApiUrl)
+
+	payload := map[string]string{}
+	payload["Raw"] = rawMessage
+
+	var r google.GmailSendMessageResponse
+
+	err = google.GmailApiCall("POST", url, payload, &r, profile)
+	if err != nil {
+		return err
+	}
 	return nil
 }
