@@ -36,7 +36,7 @@ func Interpret(colorMode clicolors.ColorMode) {
 				var profile google.GoogleProfile
 				var err error
 				if len(os.Args) > 3 {
-					err = persistence.GetProfile(os.Args[4], &profile)
+					err = persistence.GetProfile(os.Args[3], &profile)
 				} else {
 					err = persistence.GetFirstProfile(&profile)
 				}
@@ -53,7 +53,7 @@ func Interpret(colorMode clicolors.ColorMode) {
 				var profile google.GoogleProfile
 				var err error
 				if len(os.Args) > 3 {
-					err = persistence.GetProfile(os.Args[4], &profile)
+					err = persistence.GetProfile(os.Args[3], &profile)
 				} else {
 					err = persistence.GetFirstProfile(&profile)
 				}

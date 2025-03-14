@@ -40,9 +40,10 @@ func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GooglePr
 	var c int
 	gmail.GetUnreadCount(profile, &c)
 	unreadCount := fmt.Sprintf("%sUnread: %d%s", clicolors.GetUnreadColor(colorMode, c), c, clicolors.GetColor(colorMode, clicolors.Reset))
-	if count == 1 {
+	if count > 1 {
 		fmt.Printf("%s\n", unreadCount)
 	}
+
 	for i, v := range r.Messages {
 		var m google.GmailMessage
 		gmail.GetMessageMetadata(profile, &m, v.Id)
@@ -52,7 +53,9 @@ func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GooglePr
 
 		if count > 1 {
 			fmt.Printf("%d) %s\n", i+1, lastMessage)
-		}
+		} else {
+			fmt.Printf("%s | %s\n", unreadCount, lastMessage)
+    }
 	}
 }
 
