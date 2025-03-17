@@ -33,7 +33,11 @@ func printProfiles(colorMode clicolors.ColorMode) {
 func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GoogleProfile, count int) {
 	var r google.GmailMessagesResponse
 
-	auth.RefreshToken(profile)
+	err := auth.RefreshToken(profile)
+	if err != nil {
+		fmt.Println("Error!")
+		return
+	}
 	persistence.UpsertProfile(profile)
 	gmail.ListMessages(profile, &r, count)
 
@@ -63,7 +67,11 @@ func printEvents(colorMode clicolors.ColorMode, profile *google.GoogleProfile, n
 	var r google.CalendarEventResponse
 	start := time.Now()
 
-	auth.RefreshToken(profile)
+	err := auth.RefreshToken(profile)
+	if err != nil {
+		fmt.Println("Error!")
+		return
+	}
 	persistence.UpsertProfile(profile)
 	calendar.GetEvents(profile, &r, start, 10)
 

@@ -42,7 +42,6 @@ func Interpret(colorMode clicolors.ColorMode) {
 
 func single(colorMode clicolors.ColorMode) {
 	switch os.Args[2] {
-	// single
 	case "messages":
 		{
 			var profile google.GoogleProfile
