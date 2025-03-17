@@ -69,7 +69,6 @@ func single(colorMode clicolors.ColorMode) {
 			} else {
 				err = persistence.GetFirstProfile(&profile)
 			}
-			fmt.Println(profile)
 
 			if err != nil {
 				fmt.Println(err)
