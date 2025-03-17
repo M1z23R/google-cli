@@ -110,7 +110,7 @@ func extractEmail(input string) string {
 
 func joinTimes(start time.Time, end time.Time) string {
 	return fmt.Sprintf("%s %s-%s",
-		start.Format("2006-01-02"),
+		start.Format("02-01-2006"),
 		start.Format("15:04"),
 		end.Format("15:04"),
 	)
