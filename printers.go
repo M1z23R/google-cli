@@ -63,7 +63,9 @@ func printEvents(colorMode clicolors.ColorMode, profile *google.GoogleProfile, n
 	var r google.CalendarEventResponse
 	start := time.Now()
 
+	fmt.Println(profile.Tokens.AccessToken)
 	auth.RefreshToken(profile)
+	fmt.Println(profile.Tokens.AccessToken)
 	persistence.UpsertProfile(profile)
 	calendar.GetEvents(profile, &r, start, 10)
 
