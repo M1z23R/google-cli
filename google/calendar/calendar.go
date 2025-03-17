@@ -12,7 +12,6 @@ const getEventsUrl = "https://www.googleapis.com/calendar/v3/calendars/primary/e
 
 func GetEvents(profile *google.GoogleProfile, eventsResponse *google.CalendarEventResponse, start time.Time, count int) error {
 	timeMin := start.Format(time.RFC3339)
-
 	values := url.Values{}
 	values.Add("maxResults", fmt.Sprintf("%d", count))
 	values.Add("calendarId", profile.EmailAddress)

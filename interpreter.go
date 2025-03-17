@@ -29,47 +29,56 @@ func Interpret(colorMode clicolors.ColorMode) {
 				ls(colorMode)
 				break
 			}
-
-			// single
-		case "messages":
+		default:
 			{
-				var profile google.GoogleProfile
-				var err error
-				if len(os.Args) > 3 {
-					err = persistence.GetProfile(os.Args[3], &profile)
-				} else {
-					err = persistence.GetFirstProfile(&profile)
-				}
-
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
-				printLatestMessages(colorMode, &profile, 1)
-				break
-			}
-		case "calendar":
-			{
-				var profile google.GoogleProfile
-				var err error
-				if len(os.Args) > 3 {
-					err = persistence.GetProfile(os.Args[3], &profile)
-				} else {
-					err = persistence.GetFirstProfile(&profile)
-				}
-
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
-
-				printEvents(colorMode, &profile, 1)
+				single(colorMode)
 				break
 			}
 		}
 		return
 	} else {
 		printProfiles(colorMode)
+	}
+}
+
+func single(colorMode clicolors.ColorMode) {
+	switch os.Args[2] {
+	// single
+	case "messages":
+		{
+			var profile google.GoogleProfile
+			var err error
+			if len(os.Args) > 3 {
+				err = persistence.GetProfile(os.Args[3], &profile)
+			} else {
+				err = persistence.GetFirstProfile(&profile)
+			}
+
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+			printLatestMessages(colorMode, &profile, 1)
+			break
+		}
+	case "calendar":
+		{
+			var profile google.GoogleProfile
+			var err error
+			if len(os.Args) > 3 {
+				err = persistence.GetProfile(os.Args[3], &profile)
+			} else {
+				err = persistence.GetFirstProfile(&profile)
+			}
+
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			printEvents(colorMode, &profile, true)
+			break
+		}
 	}
 }
 
@@ -131,7 +140,7 @@ func ls(colorMode clicolors.ColorMode) {
 				break
 			}
 
-			printEvents(colorMode, &profile, 10)
+			printEvents(colorMode, &profile, false)
 			break
 		}
 	}

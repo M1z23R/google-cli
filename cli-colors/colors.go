@@ -65,14 +65,14 @@ func GetUnreadColor(colorMode ColorMode, c int) string {
 func GetEventColor(colorMode ColorMode, t time.Time) string {
 	minutes := GetMinutesDifference(t)
 
-	if minutes < 60 {
-		return GetColor(colorMode, LightGreen)
-	} else if minutes < 30 {
-		return GetColor(colorMode, LightBlue)
+	if minutes <= 5 {
+		return GetColor(colorMode, Red)
 	} else if minutes < 15 {
 		return GetColor(colorMode, LightRed)
-	} else if minutes <= 5 {
-		return GetColor(colorMode, Red)
+	} else if minutes < 30 {
+		return GetColor(colorMode, LightBlue)
+	} else if minutes < 60 {
+		return GetColor(colorMode, LightGreen)
 	} else {
 		return GetColor(colorMode, White)
 	}

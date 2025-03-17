@@ -55,19 +55,27 @@ func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GooglePr
 			fmt.Printf("%d) %s\n", i+1, lastMessage)
 		} else {
 			fmt.Printf("%s | %s\n", unreadCount, lastMessage)
-    }
+		}
 	}
 }
 
-func printEvents(colorMode clicolors.ColorMode, profile *google.GoogleProfile, count int) {
+func printEvents(colorMode clicolors.ColorMode, profile *google.GoogleProfile, next bool) {
 	var r google.CalendarEventResponse
 	start := time.Now()
 
 	auth.RefreshToken(profile)
 	persistence.UpsertProfile(profile)
-	calendar.GetEvents(profile, &r, start, count)
+	calendar.GetEvents(profile, &r, start, 10)
+
 	for _, v := range r.Items {
-		fmt.Printf("%s%s%s | %s%s%s\n", clicolors.GetColor(colorMode, clicolors.LightGreen), v.Summary, clicolors.GetColor(colorMode, clicolors.Reset), clicolors.GetEventColor(colorMode, v.Start.DateTime), joinTimes(v.Start.DateTime, v.End.DateTime), clicolors.GetColor(colorMode, clicolors.Reset))
+		if next {
+			if v.Start.DateTime.After(time.Now()) {
+				fmt.Printf("%s%s%s | %s%s%s\n", clicolors.GetColor(colorMode, clicolors.LightGreen), v.Summary, clicolors.GetColor(colorMode, clicolors.Reset), clicolors.GetEventColor(colorMode, v.Start.DateTime), joinTimes(v.Start.DateTime, v.End.DateTime), clicolors.GetColor(colorMode, clicolors.Reset))
+				break
+			}
+		} else {
+			fmt.Printf("%s%s%s | %s%s%s\n", clicolors.GetColor(colorMode, clicolors.LightGreen), v.Summary, clicolors.GetColor(colorMode, clicolors.Reset), clicolors.GetEventColor(colorMode, v.Start.DateTime), joinTimes(v.Start.DateTime, v.End.DateTime), clicolors.GetColor(colorMode, clicolors.Reset))
+		}
 	}
 }
 
