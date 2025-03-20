@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"strings"
 	"time"
 
@@ -51,7 +52,7 @@ func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GooglePr
 	for i, v := range r.Messages {
 		var m google.GmailMessage
 		gmail.GetMessageMetadata(profile, &m, v.Id)
-		lastMessageSubject := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightBlue), gmail.ExtractHeader(&m, "Subject"), clicolors.GetColor(colorMode, clicolors.Reset))
+		lastMessageSubject := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightBlue), html.EscapeString(gmail.ExtractHeader(&m, "Subject")), clicolors.GetColor(colorMode, clicolors.Reset))
 		lastMessageFrom := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightGreen), extractEmail(gmail.ExtractHeader(&m, "From")), clicolors.GetColor(colorMode, clicolors.Reset))
 		lastMessage := fmt.Sprintf("%s | %s", lastMessageFrom, lastMessageSubject)
 
