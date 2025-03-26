@@ -4,11 +4,19 @@ import (
 	"time"
 )
 
+type GoogleSecret struct {
+	ID           int    `json:"id"`
+	ClientId     string `json:"clientId"`
+	ClientSecret string `json:"clientSecret"`
+	RedirectUri  string `json:"redirectUri"`
+}
+
 type GoogleProfile struct {
-	ID            int       `json:"id"`
-	EmailAddress  string    `json:"emailAddress"`
-	Tokens        Tokens    `json:"tokens"`
-	LastUpdatedAt time.Time `json:"timestamp"`
+	ID            int          `json:"id"`
+	EmailAddress  string       `json:"emailAddress"`
+	Tokens        Tokens       `json:"tokens"`
+	Secrets       GoogleSecret `json:"secrets"`
+	LastUpdatedAt time.Time    `json:"timestamp"`
 }
 
 type Tokens struct {
@@ -19,4 +27,3 @@ type Tokens struct {
 	Scope        string `json:"scope"`
 	TokenType    string `json:"token_type"`
 }
-

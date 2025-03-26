@@ -43,4 +43,3 @@ func CallbackResponse(codeCh chan string) {
 		codeCh <- code
 	})
 }
-

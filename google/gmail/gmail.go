@@ -5,14 +5,9 @@ import (
 	"net/url"
 
 	"github.com/M1z23R/google-cli/google"
-	"github.com/joho/godotenv"
 )
 
 const gmailApiUrl = "https://gmail.googleapis.com/gmail/v1/users/me/messages"
-
-func init() {
-	godotenv.Load()
-}
 
 func ListMessages(profile *google.GoogleProfile, messagesList *google.GmailMessagesResponse, count int) error {
 	values := url.Values{}

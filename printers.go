@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"html"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,19 +33,39 @@ func printProfiles(colorMode clicolors.ColorMode) {
 
 }
 
-func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GoogleProfile, count int) {
-	var r google.GmailMessagesResponse
+func printLatestMessages(colorMode clicolors.ColorMode, count int) {
+	var profile google.GoogleProfile
+	profileId := -1
 
-	err := auth.RefreshToken(profile)
+	var err error
+	if len(os.Args) > 3 {
+		profileId, err = strconv.Atoi(os.Args[3])
+		if err != nil {
+			fmt.Println("Couldn't parse profileId")
+			return
+		}
+
+		err = persistence.GetProfile(profileId, &profile)
+	} else {
+		err = persistence.GetProfile(-1, &profile)
+	}
+
 	if err != nil {
-		fmt.Println("Error!")
+		fmt.Println(err)
 		return
 	}
-	persistence.UpsertProfile(profile)
-	gmail.ListMessages(profile, &r, count)
+	var r google.GmailMessagesResponse
+
+	err = auth.RefreshToken(&profile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	persistence.UpsertProfile(&profile)
+	gmail.ListMessages(&profile, &r, count)
 
 	var c int
-	gmail.GetUnreadCount(profile, &c)
+	gmail.GetUnreadCount(&profile, &c)
 	unreadCount := fmt.Sprintf("%sUnread: %d%s", clicolors.GetUnreadColor(colorMode, c), c, clicolors.GetColor(colorMode, clicolors.Reset))
 	if count > 1 {
 		fmt.Printf("%s\n", unreadCount)
@@ -51,7 +73,7 @@ func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GooglePr
 
 	for i, v := range r.Messages {
 		var m google.GmailMessage
-		gmail.GetMessageMetadata(profile, &m, v.Id)
+		gmail.GetMessageMetadata(&profile, &m, v.Id)
 		lastMessageSubject := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightBlue), html.EscapeString(gmail.ExtractHeader(&m, "Subject")), clicolors.GetColor(colorMode, clicolors.Reset))
 		lastMessageFrom := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightGreen), extractEmail(gmail.ExtractHeader(&m, "From")), clicolors.GetColor(colorMode, clicolors.Reset))
 		lastMessage := fmt.Sprintf("%s | %s", lastMessageFrom, lastMessageSubject)
@@ -64,17 +86,39 @@ func printLatestMessages(colorMode clicolors.ColorMode, profile *google.GooglePr
 	}
 }
 
-func printEvents(colorMode clicolors.ColorMode, profile *google.GoogleProfile, next bool) {
+func printEvents(colorMode clicolors.ColorMode, next bool) {
+	var profile google.GoogleProfile
+	profileId := -1
+
+	var err error
+	if len(os.Args) > 3 {
+		profileId, err = strconv.Atoi(os.Args[3])
+		if err != nil {
+			fmt.Println("Couldn't parse profileId")
+			return
+		}
+
+		err = persistence.GetProfile(profileId, &profile)
+	} else {
+		err = persistence.GetProfile(-1, &profile)
+	}
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	var r google.CalendarEventResponse
 	start := time.Now()
 
-	err := auth.RefreshToken(profile)
+	err = auth.RefreshToken(&profile)
 	if err != nil {
-		fmt.Println("Error!")
+		fmt.Println(err)
 		return
 	}
-	persistence.UpsertProfile(profile)
-	calendar.GetEvents(profile, &r, start, 10)
+	persistence.UpsertProfile(&profile)
+
+	calendar.GetEvents(&profile, &r, start, 10)
 
 	for _, v := range r.Items {
 		if next {
@@ -88,9 +132,41 @@ func printEvents(colorMode clicolors.ColorMode, profile *google.GoogleProfile, n
 	}
 }
 
+func addSecrets() {
+	if len(os.Args) < 6 {
+		fmt.Println("You must provide ClientId, ClientSecret and RedirectUri.")
+		return
+	}
+
+	secret := google.GoogleSecret{ClientId: os.Args[3], ClientSecret: os.Args[4], RedirectUri: os.Args[5]}
+	err := persistence.UpsertGoogleSecrets(&secret)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Something went wrong.")
+	} else {
+		fmt.Println("Secrets stored successfully.")
+	}
+}
+
 func addGoogleAccount() {
+	if len(os.Args) < 4 {
+		fmt.Println("Must provide google secrets id.")
+		return
+	}
+	id, err := strconv.Atoi(os.Args[3])
+	if err != nil {
+		fmt.Printf("Failed to convert argument `%s` to int.\n", os.Args[3])
+		return
+	}
 	profile := google.GoogleProfile{}
-	err := auth.AddProfile(&profile)
+
+	err = persistence.GetSecret(id, &profile.Secrets)
+	if err != nil {
+		fmt.Printf("Failed to get secret with id '%s'.\n", os.Args[3])
+		return
+	}
+
+	err = auth.AddProfile(&profile)
 	if err != nil {
 		fmt.Println(err)
 		return

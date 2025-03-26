@@ -6,13 +6,17 @@ import (
 	"strconv"
 
 	clicolors "github.com/M1z23R/google-cli/cli-colors"
-	"github.com/M1z23R/google-cli/google"
 	"github.com/M1z23R/google-cli/persistence"
 )
 
 func Interpret(colorMode clicolors.ColorMode) {
 	if len(os.Args) >= 3 {
 		switch os.Args[2] {
+		case "secrets":
+			{
+				addSecrets()
+				break
+			}
 		case "login":
 			{
 				addGoogleAccount()
@@ -44,37 +48,12 @@ func single(colorMode clicolors.ColorMode) {
 	switch os.Args[2] {
 	case "messages":
 		{
-			var profile google.GoogleProfile
-			var err error
-			if len(os.Args) > 3 {
-				err = persistence.GetProfile(os.Args[3], &profile)
-			} else {
-				err = persistence.GetFirstProfile(&profile)
-			}
-
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-			printLatestMessages(colorMode, &profile, 1)
+			printLatestMessages(colorMode, 1)
 			break
 		}
 	case "calendar":
 		{
-			var profile google.GoogleProfile
-			var err error
-			if len(os.Args) > 3 {
-				err = persistence.GetProfile(os.Args[3], &profile)
-			} else {
-				err = persistence.GetFirstProfile(&profile)
-			}
-
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
-			printEvents(colorMode, &profile, true)
+			printEvents(colorMode, true)
 			break
 		}
 	}
@@ -108,37 +87,12 @@ func ls(colorMode clicolors.ColorMode) {
 		}
 	case "messages":
 		{
-			var profile google.GoogleProfile
-			var err error
-			if len(os.Args) > 3 {
-				err = persistence.GetProfile(os.Args[4], &profile)
-			} else {
-				err = persistence.GetFirstProfile(&profile)
-			}
-
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-			printLatestMessages(colorMode, &profile, 10)
+			printLatestMessages(colorMode, 10)
 			break
 		}
 	case "calendar":
 		{
-			var profile google.GoogleProfile
-			var err error
-			if len(os.Args) > 3 {
-				err = persistence.GetProfile(os.Args[4], &profile)
-			} else {
-				err = persistence.GetFirstProfile(&profile)
-			}
-
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
-			printEvents(colorMode, &profile, false)
+			printEvents(colorMode, false)
 			break
 		}
 	}
