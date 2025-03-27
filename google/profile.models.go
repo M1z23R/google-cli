@@ -20,10 +20,12 @@ type GoogleProfile struct {
 }
 
 type Tokens struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	IdToken      string `json:"id_token"`
-	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
-	TokenType    string `json:"token_type"`
+	AccessToken  string    `json:"access_token"`
+	ExpiresIn    int       `json:"expires_in"`
+	IdToken      string    `json:"id_token"`
+	RefreshToken string    `json:"refresh_token"`
+	Scope        string    `json:"scope"`
+	TokenType    string    `json:"token_type"`
+	Expires      time.Time `json:"expires"`
+	LastUpdated  time.Time `json:"last_updated"`
 }

@@ -38,7 +38,7 @@ func InitDb() {
 		log.Fatal("Failed to create profiles table")
 	}
 
-	_, err = DB.Exec("CREATE TABLE IF NOT EXISTS tokens (id INTEGER PRIMARY KEY, access_token TEXT, refresh_token TEXT, scope TEXT, token_type TEXT, id_token TEXT, expires_in NUMBER, profile_id INTEGER, FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE);")
+	_, err = DB.Exec("CREATE TABLE IF NOT EXISTS tokens (id INTEGER PRIMARY KEY, access_token TEXT, refresh_token TEXT, scope TEXT, token_type TEXT, id_token TEXT, expires_in NUMBER, expires TIMESTAMP, last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  profile_id INTEGER, FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE);")
 	if err != nil {
 		log.Fatal("Failed to create tokens table")
 	}
@@ -62,14 +62,18 @@ func InsertProfile(profile *google.GoogleProfile) error {
       token_type,
       id_token,
       expires_in,
+      expires,
+      last_updated,
       profile_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		profile.Tokens.AccessToken,
 		profile.Tokens.RefreshToken,
 		profile.Tokens.Scope,
 		profile.Tokens.TokenType,
 		profile.Tokens.IdToken,
 		profile.Tokens.ExpiresIn,
+		time.Now().Add(time.Duration(profile.Tokens.ExpiresIn)*time.Second),
+		time.Now(),
 		lastInsertedId)
 
 	return err
@@ -82,13 +86,15 @@ func UpdateProfile(profile *google.GoogleProfile, profileId int) error {
 	}
 
 	_, err = DB.Exec(`
-    UPDATE 'tokens' SET access_token = ?, refresh_token = ?, scope = ?, token_type = ?, id_token = ?, expires_in = ? WHERE profile_id = ?`,
+    UPDATE 'tokens' SET access_token = ?, refresh_token = ?, scope = ?, token_type = ?, id_token = ?, expires_in = ?, expires = ?, last_updated = ? WHERE profile_id = ?`,
 		profile.Tokens.AccessToken,
 		profile.Tokens.RefreshToken,
 		profile.Tokens.Scope,
 		profile.Tokens.TokenType,
 		profile.Tokens.IdToken,
 		profile.Tokens.ExpiresIn,
+		time.Now().Add(time.Duration(profile.Tokens.ExpiresIn)*time.Second),
+		time.Now(),
 		profileId)
 
 	if err != nil {
@@ -133,8 +139,8 @@ func GetProfile(profileId int, profile *google.GoogleProfile) error {
 		return err
 	}
 
-	r = DB.QueryRow("SELECT access_token, refresh_token, scope, token_type, id_token, expires_in From 'tokens' where profile_id = ?", profileId)
-	err = r.Scan(&profile.Tokens.AccessToken, &profile.Tokens.RefreshToken, &profile.Tokens.Scope, &profile.Tokens.TokenType, &profile.Tokens.IdToken, &profile.Tokens.ExpiresIn)
+	r = DB.QueryRow("SELECT access_token, refresh_token, scope, token_type, id_token, expires_in, expires, last_updated From 'tokens' where profile_id = ?", profileId)
+	err = r.Scan(&profile.Tokens.AccessToken, &profile.Tokens.RefreshToken, &profile.Tokens.Scope, &profile.Tokens.TokenType, &profile.Tokens.IdToken, &profile.Tokens.ExpiresIn, &profile.Tokens.Expires, &profile.Tokens.LastUpdated)
 	if err != nil {
 		return err
 	}
@@ -147,7 +153,7 @@ func GetProfile(profileId int, profile *google.GoogleProfile) error {
 
 func GetProfiles(profiles *[]google.GoogleProfile) error {
 	rows, err := DB.Query(`
-    SELECT email_address, last_updated_at, access_token, refresh_token, scope, token_type, id_token, expires_in, clientId, clientSecret, redirect_uri 
+    SELECT email_address, last_updated_at, access_token, refresh_token, scope, token_type, id_token, expires_in, expires, last_updated, clientId, clientSecret, redirect_uri 
       FROM profiles p
       JOIN tokens t on t.profile_id = p.id
       JOIN google_secrets g on p.secrets_id = g.id
@@ -160,7 +166,7 @@ func GetProfiles(profiles *[]google.GoogleProfile) error {
 
 	for rows.Next() {
 		profile := google.GoogleProfile{}
-		rows.Scan(&profile.EmailAddress, &profile.LastUpdatedAt, &profile.Tokens.AccessToken, &profile.Tokens.RefreshToken, &profile.Tokens.Scope, &profile.Tokens.TokenType, &profile.Tokens.IdToken, &profile.Tokens.ExpiresIn, &profile.Secrets.ClientId, &profile.Secrets.ClientSecret, &profile.Secrets.RedirectUri)
+		rows.Scan(&profile.EmailAddress, &profile.LastUpdatedAt, &profile.Tokens.AccessToken, &profile.Tokens.RefreshToken, &profile.Tokens.Scope, &profile.Tokens.TokenType, &profile.Tokens.IdToken, &profile.Tokens.ExpiresIn, &profile.Tokens.Expires, &profile.Tokens.LastUpdated, &profile.Secrets.ClientId, &profile.Secrets.ClientSecret, &profile.Secrets.RedirectUri)
 
 		*profiles = append(*profiles, profile)
 	}
@@ -204,14 +210,13 @@ func UpdateSecret(secretId int, secret *google.GoogleSecret) error {
 	return err
 }
 
-func ClearDb() error {
-	_, err := DB.Exec("DELETE FROM profiles")
-	_, err = DB.Exec("DELETE FROM google_secrets")
-	_, err = DB.Exec("DELETE FROM tokens")
-	_, err = DB.Exec("DROP TABLE profiles")
-	_, err = DB.Exec("DROP TABLE google_secrets")
-	_, err = DB.Exec("DROP TABLE tokens")
-	return err
+func ClearDb() {
+	DB.Exec("DELETE FROM profiles")
+	DB.Exec("DELETE FROM google_secrets")
+	DB.Exec("DELETE FROM tokens")
+	DB.Exec("DROP TABLE profiles")
+	DB.Exec("DROP TABLE google_secrets")
+	DB.Exec("DROP TABLE tokens")
 }
 
 func getConfigPath() (string, error) {
