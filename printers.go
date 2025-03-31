@@ -78,8 +78,15 @@ func printLatestMessages(colorMode clicolors.ColorMode, count int) {
 	for i, v := range r.Messages {
 		var m google.GmailMessage
 		gmail.GetMessageMetadata(&profile, &m, v.Id)
-		lastMessageSubject := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightBlue), html.EscapeString(gmail.ExtractHeader(&m, "Subject")), clicolors.GetColor(colorMode, clicolors.Reset))
-		lastMessageFrom := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightGreen), extractEmail(gmail.ExtractHeader(&m, "From")), clicolors.GetColor(colorMode, clicolors.Reset))
+
+		from := extractEmail(gmail.ExtractHeader(&m, "From"))
+		subject := gmail.ExtractHeader(&m, "Subject")
+		if len(subject) > 33 {
+			subject = subject[:30] + "..."
+		}
+
+		lastMessageFrom := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightGreen), from, clicolors.GetColor(colorMode, clicolors.Reset))
+		lastMessageSubject := fmt.Sprintf("%s%s%s", clicolors.GetColor(colorMode, clicolors.LightBlue), html.EscapeString(subject), clicolors.GetColor(colorMode, clicolors.Reset))
 		lastMessage := fmt.Sprintf("%s | %s", lastMessageFrom, lastMessageSubject)
 
 		if count > 1 {
